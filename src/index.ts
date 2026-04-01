@@ -19,12 +19,16 @@ app.get("/run", async (c) => {
   const e2bSandboxId = c.req.query("e2bSandboxId");
   const daytonaSandboxId = c.req.query("daytonaSandboxId");
 
-  const result = await runTests(tests, samples, {
-    e2bSandboxId: e2bSandboxId || undefined,
-    daytonaSandboxId: daytonaSandboxId || undefined,
-  });
-
-  return c.json(result);
+  try {
+    const result = await runTests(tests, samples, {
+      e2bSandboxId: e2bSandboxId || undefined,
+      daytonaSandboxId: daytonaSandboxId || undefined,
+    });
+    return c.json(result);
+  } catch (err) {
+    const message = err instanceof Error ? err.stack ?? err.message : String(err);
+    return c.json({ error: message }, 500);
+  }
 });
 
 app.post("/teardown", async (c) => {

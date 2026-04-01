@@ -2,7 +2,7 @@ import { Daytona } from "@daytonaio/sdk";
 import { SandboxAgent } from "sandbox-agent";
 import { connectAgent } from "./shared.js";
 
-const AGENT_PORT = 2468;
+const AGENT_PORT = 8080; // Daytona preview URLs require ports 3000-9999
 
 export interface DaytonaContext {
   daytona: Daytona;
@@ -23,7 +23,10 @@ export async function setupDaytona(
 ): Promise<DaytonaContext> {
   if (cached) return cached;
 
-  const daytona = new Daytona();
+  const daytona = new Daytona({
+    apiKey: process.env.DAYTONA_API_KEY,
+    target: process.env.DAYTONA_TARGET ?? "us",
+  });
   let sandbox: Awaited<ReturnType<Daytona["create"]>>;
   let sandboxId: string;
 
@@ -38,7 +41,13 @@ export async function setupDaytona(
     });
     sandboxId = sandbox.id;
 
-    // Install sandbox-agent
+    // Install curl + sandbox-agent
+    await sandbox.process.executeCommand(
+      "apt-get update -qq && apt-get install -y -qq curl ca-certificates > /dev/null 2>&1",
+      undefined,
+      undefined,
+      60
+    );
     await sandbox.process.executeCommand(
       "curl -fsSL https://releases.rivet.dev/sandbox-agent/0.4.x/install.sh | sh",
       undefined,
@@ -48,11 +57,12 @@ export async function setupDaytona(
 
     // Start sandbox-agent in background
     await sandbox.process.executeCommand(
-      `nohup sandbox-agent server --no-token --host 0.0.0.0 --port ${AGENT_PORT} > /dev/null 2>&1 &`,
+      `bash -c 'sandbox-agent server --no-token --host 0.0.0.0 --port ${AGENT_PORT} </dev/null >/tmp/sa.log 2>&1 &'`,
       undefined,
       undefined,
       5
     );
+    await new Promise((r) => setTimeout(r, 2000));
   }
 
   // Get preview URL for the agent port
