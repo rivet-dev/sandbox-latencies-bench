@@ -12,6 +12,11 @@ import {
   getDaytonaContext,
 } from "./sandboxes/daytona.js";
 import { agentExec, agentHealth } from "./sandboxes/shared.js";
+import {
+  setupAgentOs,
+  teardownAgentOs,
+  agentOsNativeExec,
+} from "./sandboxes/agentos.js";
 import { anthropicInference } from "./llm/anthropic.js";
 import { openaiInference } from "./llm/openai.js";
 import { openrouterInference } from "./llm/openrouter.js";
@@ -23,6 +28,7 @@ export const ALL_TESTS = [
   "daytona:native-exec",
   "daytona:agent-exec",
   "daytona:agent-health",
+  "agentos:native-exec",
   "llm:anthropic",
   "llm:openai",
   "llm:openrouter",
@@ -72,6 +78,8 @@ function getTestFn(testId: TestId): () => Promise<void> {
       return () => agentExec(getDaytonaContext()!.agentSdk);
     case "daytona:agent-health":
       return () => agentHealth(getDaytonaContext()!.agentSdk);
+    case "agentos:native-exec":
+      return agentOsNativeExec;
     case "llm:anthropic":
       return anthropicInference;
     case "llm:openai":
@@ -90,6 +98,7 @@ export async function runTests(
 
   const needE2b = testIds.some((t) => t.startsWith("e2b:"));
   const needDaytona = testIds.some((t) => t.startsWith("daytona:"));
+  const needAgentOs = testIds.some((t) => t.startsWith("agentos:"));
 
   // Setup sandboxes if needed (not timed)
   const setupPromises: Promise<void>[] = [];
@@ -97,6 +106,7 @@ export async function runTests(
     setupPromises.push(setupE2b(opts?.e2bSandboxId).then(() => {}));
   if (needDaytona)
     setupPromises.push(setupDaytona(opts?.daytonaSandboxId).then(() => {}));
+  if (needAgentOs) setupPromises.push(setupAgentOs().then(() => {}));
   await Promise.all(setupPromises);
 
   const results: Record<string, TestResult> = {};
@@ -135,5 +145,5 @@ export async function runTests(
 }
 
 export async function teardownAll(): Promise<void> {
-  await Promise.all([teardownE2b(), teardownDaytona()]);
+  await Promise.all([teardownE2b(), teardownDaytona(), teardownAgentOs()]);
 }

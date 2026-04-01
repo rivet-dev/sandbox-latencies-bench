@@ -3,7 +3,7 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.mjs --format=esm --banner:js=\"import{createRequire}from'module';const require=createRequire(import.meta.url);\" --external:@aws-sdk/*",
+    "build": "esbuild src/index.ts --bundle --platform=node --target=node20 --outfile=dist/index.mjs --format=esm --banner:js=\"import{createRequire as __cr}from'module';const require=__cr(import.meta.url);\" --external:@aws-sdk/*",
     "dev": "tsx src/dev.ts"
   },
   "dependencies": {
@@ -12,11 +12,12 @@
     "e2b": "^1",
     "hono": "^4",
     "openai": "^4",
+    "rivetkit": "^2.2.0",
     "sandbox-agent": "^0.4"
   },
   "devDependencies": {
-    "@types/node": "^20",
     "@hono/node-server": "^1",
+    "@types/node": "^20",
     "esbuild": "^0.21",
     "tsx": "^4",
     "typescript": "^5"
