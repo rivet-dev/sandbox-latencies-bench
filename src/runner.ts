@@ -14,8 +14,11 @@ import {
   daytonaColdstart,
 } from "./sandboxes/daytona.js";
 import { agentExec, agentHealth } from "./sandboxes/shared.js";
-import { anthropicInference } from "./llm/anthropic.js";
-import { openaiInference } from "./llm/openai.js";
+import {
+  anthropicHaikuInference,
+  anthropicOpusInference,
+} from "./llm/anthropic.js";
+import { openaiMiniInference, openaiInference } from "./llm/openai.js";
 import { openrouterInference } from "./llm/openrouter.js";
 import { openrouterOpenaiInference } from "./llm/openrouter-openai.js";
 
@@ -28,9 +31,11 @@ export const ALL_TESTS = [
   "daytona:native-exec",
   "daytona:agent-exec",
   "daytona:agent-health",
-  "llm:anthropic",
+  "llm:anthropic-haiku",
+  "llm:anthropic-opus",
+  "llm:openai-mini",
   "llm:openai",
-  "llm:openrouter",
+  "llm:openrouter-haiku",
   "llm:openrouter-openai",
 ] as const;
 
@@ -82,11 +87,15 @@ function getTestFn(testId: TestId): () => Promise<void> {
       return () => agentExec(getDaytonaContext()!.agentSdk);
     case "daytona:agent-health":
       return () => agentHealth(getDaytonaContext()!.agentSdk);
-    case "llm:anthropic":
-      return anthropicInference;
+    case "llm:anthropic-haiku":
+      return anthropicHaikuInference;
+    case "llm:anthropic-opus":
+      return anthropicOpusInference;
+    case "llm:openai-mini":
+      return openaiMiniInference;
     case "llm:openai":
       return openaiInference;
-    case "llm:openrouter":
+    case "llm:openrouter-haiku":
       return openrouterInference;
     case "llm:openrouter-openai":
       return openrouterOpenaiInference;
