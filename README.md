@@ -1,46 +1,44 @@
 # AI Latency Benchmarks
 
-Measures round-trip latencies from AWS Lambda to sandbox providers and LLM inference APIs.
+Round-trip latencies from AWS Lambda to sandbox providers and LLM inference APIs.
 
-## Setup
+## Results
 
-- **Runtime:** AWS Lambda, Node.js 20.x, 3072 MB memory
-- **Region:** us-east-1
-- **Method:** Each test runs sequentially N times. Sandbox exec/health tests reuse a pre-provisioned sandbox. Coldstart tests create and destroy a fresh sandbox each sample.
+![Sandbox Provider Latency](sandbox-chart.png)
 
-## Available tests
+![LLM Inference Latency](provider-chart.png)
 
-| Test | Description |
-|------|-------------|
-| `e2b:coldstart` | Create + destroy a fresh E2B sandbox |
-| `e2b:native-exec` | `echo ok` via E2B SDK |
-| `e2b:agent-exec` | `echo ok` via Sandbox Agent |
-| `e2b:agent-health` | `GET /v1/health` via Sandbox Agent |
-| `daytona:coldstart` | Create + destroy a fresh Daytona sandbox |
-| `daytona:native-exec` | `echo ok` via Daytona SDK |
-| `daytona:agent-exec` | `echo ok` via Sandbox Agent |
-| `daytona:agent-health` | `GET /v1/health` via Sandbox Agent |
-| `llm:anthropic` | Anthropic Haiku 4.5, `"Hi"`, max_tokens=1 |
-| `llm:openai` | OpenAI GPT-5 mini, `"Hi"`, max_completion_tokens=16 |
-| `llm:openrouter` | Haiku 4.5 via OpenRouter |
-| `llm:openrouter-openai` | GPT-5 mini via OpenRouter |
+## Methodology
+
+- **Lambda:** Node.js 20.x, 3072 MB, us-east-1 (Ashburn, VA)
+- **Samples:** 100 per test (10 fresh sandboxes x 10 samples each)
+- **Sandbox tests:** Coldstart = `create()` + `delete()`. Tool execution = `echo ok` via provider SDK. Network round trip = Sandbox Agent `GET /v1/health`.
+- **LLM tests:** Minimal prompt (`"Hi"`, max_tokens=1) measuring network + inference overhead, not generation speed.
+- **Sandbox provisioning and agent installation are excluded** from exec/health measurements. Sandboxes are reused across samples within each iteration.
+
+### Network topology
+
+| | ASN | Location |
+|--|-----|----------|
+| Lambda | AS14618 Amazon.com | Ashburn, VA |
+| E2B | AS396982 Google LLC | The Dalles, OR |
+| Daytona | AS30633 Leaseweb USA | Centreville, VA |
 
 ## Usage
 
 ```bash
-# JSON output
+# Run all tests
 ./invoke.sh /run "tests=*&samples=5"
 
-# CSV output (for Google Sheets)
-./invoke.sh /run "tests=*&samples=10&format=csv"
-
-# Specific tests
-./invoke.sh /run "tests=e2b:coldstart,daytona:coldstart&samples=3"
+# CSV output
 ./invoke.sh /run "tests=llm:*&samples=10&format=csv"
-```
 
-### Deploy
+# Full benchmark (10 iterations x 10 samples, outputs sandbox-raw.csv + provider-raw.csv)
+./bench.sh
 
-```bash
+# Network info from Lambda
+./invoke.sh /netinfo
+
+# Deploy
 ./deploy.sh
 ```
