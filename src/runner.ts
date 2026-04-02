@@ -19,8 +19,14 @@ import {
   anthropicOpusInference,
 } from "./llm/anthropic.js";
 import { openaiMiniInference, openaiInference } from "./llm/openai.js";
-import { openrouterInference } from "./llm/openrouter.js";
-import { openrouterOpenaiInference } from "./llm/openrouter-openai.js";
+import {
+  openrouterHaikuInference,
+  openrouterOpusInference,
+} from "./llm/openrouter.js";
+import {
+  openrouterOpenaiMiniInference,
+  openrouterOpenaiInference,
+} from "./llm/openrouter-openai.js";
 
 export const ALL_TESTS = [
   "e2b:coldstart",
@@ -36,6 +42,8 @@ export const ALL_TESTS = [
   "llm:openai-mini",
   "llm:openai",
   "llm:openrouter-haiku",
+  "llm:openrouter-opus",
+  "llm:openrouter-openai-mini",
   "llm:openrouter-openai",
 ] as const;
 
@@ -96,7 +104,11 @@ function getTestFn(testId: TestId): () => Promise<void> {
     case "llm:openai":
       return openaiInference;
     case "llm:openrouter-haiku":
-      return openrouterInference;
+      return openrouterHaikuInference;
+    case "llm:openrouter-opus":
+      return openrouterOpusInference;
+    case "llm:openrouter-openai-mini":
+      return openrouterOpenaiMiniInference;
     case "llm:openrouter-openai":
       return openrouterOpenaiInference;
   }

@@ -5,9 +5,17 @@ const client = new OpenAI({
   apiKey: process.env.OPENROUTER_API_KEY,
 });
 
-export async function openrouterOpenaiInference(): Promise<void> {
+export async function openrouterOpenaiMiniInference(): Promise<void> {
   await client.chat.completions.create({
     model: "openai/gpt-5-mini",
+    max_completion_tokens: 16,
+    messages: [{ role: "user", content: "Hi" }],
+  });
+}
+
+export async function openrouterOpenaiInference(): Promise<void> {
+  await client.chat.completions.create({
+    model: "openai/gpt-5",
     max_completion_tokens: 16,
     messages: [{ role: "user", content: "Hi" }],
   });
